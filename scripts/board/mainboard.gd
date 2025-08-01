@@ -55,6 +55,7 @@ func test_populate_chess_pieces() -> void:
 		piece.position = centered_pos  # Local position (not global!)
 		piece.current_position = cell_coords
 		current_player_pieces.append(piece)
+		
 		# Add it to the *same parent* as the TileMapLayer
 		add_child(piece)
 		

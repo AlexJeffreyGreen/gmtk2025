@@ -1,15 +1,15 @@
 [gd_resource type="Resource" script_class="PieceData" load_steps=4 format=3 uid="uid://c0ft277e8e2vw"]
 
 [ext_resource type="Script" uid="uid://c45dgnbtocngv" path="res://resources/pieces/piece_data.gd" id="1_rb386"]
-[ext_resource type="Texture2D" uid="uid://b8b35sjbhxfww" path="res://assets/sprites/ChessAssets.png" id="2_dlwnk"]
+[ext_resource type="Texture2D" uid="uid://c2ldxc3utpvmh" path="res://assets/sprites/WhitePieces.png" id="2_dlwnk"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_dlwnk"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_cy76y"]
 atlas = ExtResource("2_dlwnk")
-region = Rect2(47, 39, 15, 18)
+region = Rect2(0, 0, 16, 16)
 
 [resource]
 script = ExtResource("1_rb386")
-texture = SubResource("AtlasTexture_dlwnk")
+texture = SubResource("AtlasTexture_cy76y")
 demensions = Vector2i(13, 16)
 score_value = 1
 name = "Pawn White"
