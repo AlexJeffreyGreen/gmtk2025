@@ -1,0 +1,24 @@
+[gd_scene load_steps=7 format=3 uid="uid://6d2af2rdb3pp"]
+
+[ext_resource type="Script" uid="uid://bi4xxf3ejwuqy" path="res://scripts/pieces/chesspiece.gd" id="1_7anj6"]
+[ext_resource type="Resource" uid="uid://c0ft277e8e2vw" path="res://resources/pieces/pawn_white.tres" id="2_7anj6"]
+[ext_resource type="Texture2D" uid="uid://b8b35sjbhxfww" path="res://assets/sprites/ChessAssets.png" id="2_q3cbl"]
+[ext_resource type="Shader" uid="uid://cgf6x1kg37c0q" path="res://shaders/chess_piece.gdshader" id="3_3k87t"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pvqnb"]
+shader = ExtResource("3_3k87t")
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q3cbl"]
+atlas = ExtResource("2_q3cbl")
+region = Rect2(47, 39, 15, 18)
+
+[node name="ChessPiece" type="Node2D"]
+z_index = 1
+y_sort_enabled = true
+scale = Vector2(4, 4)
+script = ExtResource("1_7anj6")
+piece_data = ExtResource("2_7anj6")
+
+[node name="PieceSprite" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_pvqnb")
+texture = SubResource("AtlasTexture_q3cbl")

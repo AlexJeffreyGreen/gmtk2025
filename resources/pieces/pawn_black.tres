@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PieceData" load_steps=4 format=3 uid="uid://dqbxqko5bf5hv"]
+
+[ext_resource type="Script" uid="uid://c45dgnbtocngv" path="res://resources/pieces/piece_data.gd" id="1_vcyoo"]
+[ext_resource type="Texture2D" uid="uid://b8b35sjbhxfww" path="res://assets/sprites/ChessAssets.png" id="2_80p6t"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_155qt"]
+atlas = ExtResource("2_80p6t")
+region = Rect2(61, 39, 15, 18)
+
+[resource]
+script = ExtResource("1_vcyoo")
+texture = SubResource("AtlasTexture_155qt")
+demensions = Vector2i(13, 16)
+score_value = 1
+name = "Pawn Black"
+metadata/_custom_type_script = "uid://c45dgnbtocngv"
