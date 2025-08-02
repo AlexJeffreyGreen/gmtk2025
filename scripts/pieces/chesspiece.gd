@@ -9,11 +9,11 @@ signal deselected_piece
 #var selected_material : Material = preload("res://assets/material/chess_piece_material.tres")
 var available_colors : Array[Color] = [Color.ORANGE, Color.RED, Color.BLUE]
 var is_mouse_over : bool = false
-
 var current_position : Vector2i
 var score_value : int :
 	get:
 		return piece_data.score_value
+
 
 
 func _ready() -> void:	
@@ -36,11 +36,8 @@ func _build_shader() -> void:
 	new_material.set_shader_parameter("width", 0)
 	new_material.set_shader_parameter("pattern", 2)
 	new_material.set_shader_parameter("inside", false)
-	
 	new_material.set_shader_parameter("color", Color.WHITE)
 	piece_sprite.material = new_material
-	#print(piece_sprite.material .get_instance_id())
-	#print(piece_sprite.texture.get_instance_id())
 
 func _build_piece_from_data() -> void:
 	if !piece_data:
@@ -48,12 +45,15 @@ func _build_piece_from_data() -> void:
 		return
 	piece_sprite.texture = piece_data.texture
 
+func _process(delta: float) -> void:
+	if self != GameManager.selected_piece:
+		set_selected_shader_value(0, Color.WHITE)
 
 
 func _on_mouse_entered() -> void:
 	is_mouse_over = true
-	if GameManager.selected_piece != self:
-		set_selected_shader_value(1, Color.WEB_GREEN)
+	#if GameManager.selected_piece != self:
+	#	set_selected_shader_value(1, Color.WEB_GREEN)
 	#pass
 	#set_selected_shader_value(1)
 	#selected_piece.emit(self)
@@ -61,8 +61,8 @@ func _on_mouse_entered() -> void:
 
 func _on_mouse_exited() -> void:
 	is_mouse_over = false
-	if GameManager.selected_piece != self:
-		set_selected_shader_value(0, Color.WHITE)
+	#if GameManager.selected_piece != self:
+	#	set_selected_shader_value(0, Color.WHITE)
 
 func set_selected_shader_value(width : int, color : Color) -> void:
 	(piece_sprite.material as ShaderMaterial).set_shader_parameter("width" , width)
@@ -71,12 +71,14 @@ func set_selected_shader_value(width : int, color : Color) -> void:
 func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 	if Input.is_action_just_pressed("select_piece"):
 		set_selected_shader_value(1, Color.GREEN)
+		selected_piece.emit(self)
+		#selected_piece.emit(self)
 		#if GameManager.selected_piece != null and GameManager.selected_piece != self:
 		#	GameManager.selected_piece.set_selected_shader_value(0, Color.WHITE)
-		if GameManager.selected_piece and GameManager.selected_piece != self:
-			GameManager.selected_piece.set_selected_shader_value(0, Color.WHITE)
-			deselected_piece.emit()
-		selected_piece.emit(self)
+		#if GameManager.selected_piece and GameManager.selected_piece != self:
+			#GameManager.selected_piece.set_selected_shader_value(0, Color.WHITE)
+			#deselected_piece.emit()
+		#selected_piece.emit(self)
 		
 
 

@@ -3,8 +3,6 @@ extends Node2D
 
 @export var row_width : int = 6
 @export var board_height : int = 10
-@export var player_spawning_coords : Array[Vector2i]
-@export var enemy_spawning_coords : Array[Vector2i]
 @onready var board := $TileMapLayer
 
 const TILE_WHITE = Vector2i(1, 0)
@@ -36,21 +34,24 @@ var current_available_moves_for_selected_piece : Array[Vector2i]
 #var current_board_tiles : Array[]
 
 func _ready():
-	position.x = get_viewport_rect().size.x / 2
+	GameManager.main_board_tile_map = self
+	BoardManager.main_board_tile_map = self
+	position.x = get_viewport_rect().size.x / 2 - 192
 	redraw_board()
-	initialize_and_respawn()
-	GameManager.main_board = self
-	GameManager.available_moves_change.connect(draw_available_moves_for_piece.bind())
+	redraw_pieces()
+	#initialize_and_respawn()
+
+	#GameManager.available_moves_change.connect(draw_available_moves_for_piece.bind())
 	
-func initialize_and_respawn() -> void:
-	var used_cells = board.get_used_cells()
-	#for cell in used_cells as Array[Vector2i]:
-		#set_tile_coord_debug_text(cell)
-	for spawn_position in player_spawning_coords as Array[Vector2i]:
-		generate_piece(spawn_position, chess_piece_data)
-	
-	for spawn_position in enemy_spawning_coords as Array[Vector2i]:
-		generate_piece(spawn_position, chess_enemy_piece_data)
+#func initialize_and_respawn() -> void:
+	#var used_cells = board.get_used_cells()
+	##for cell in used_cells as Array[Vector2i]:
+		##set_tile_coord_debug_text(cell)
+	#for spawn_position in player_spawning_coords as Array[Vector2i]:
+		#generate_piece(spawn_position, chess_piece_data)
+	#
+	#for spawn_position in enemy_spawning_coords as Array[Vector2i]:
+		#generate_piece(spawn_position, chess_enemy_piece_data)
 	
 func generate_piece(spawn_position : Vector2i, chess_data : PieceData):
 	var half_tile_size = board.tile_set.tile_size / 2
@@ -82,52 +83,55 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if Input.is_action_just_pressed("shoot"):
 		_advance_x_rows(1)
-		redraw_board()
 	if Input.is_action_just_pressed("select_piece"):
-		#print(GameManager.selected_piece)
-		var selected_available_move = GameManager.get_available_move_at_mouse()
-		if selected_available_move:
-			move_piece_to_selected_available_tile(selected_available_move)
-			#GameManager.selected_piece.deselected_piece.emit()
+		get_tile_at_mouse_position()
 
+func get_tile_at_mouse_position() -> void:
+	var mouse_screen_pos = get_viewport().get_mouse_position()
+	var mouse_local_pos = board.to_local(mouse_screen_pos)
+	var tile_coords_at_mouse = board.local_to_map(mouse_local_pos)
+	print(tile_coords_at_mouse)
 
-func move_piece_to_selected_available_tile(selected_tile_coord : Vector2i) -> void:
-	var local_pos_for_piece = board.map_to_local(selected_tile_coord)
-	var center_pos = local_pos_for_piece
-	center_pos.y -= 20
-	GameManager.selected_piece.position = center_pos
-	GameManager.selected_piece.current_position = selected_tile_coord
-	GameManager.selected_piece = null
-	#GameManager.selected_piece.deselect_self()
-	
-	#GameManager.selected_piece.current_position = selected_tile_coord
-	
-	#GameManager.selected_piece.
-		
 func _advance_x_rows(row_count : int) -> void:
 	target_scroll_offset += TILE_SIZE * row_count
 
-func redraw_board():
+func redraw_board() -> void:
 	board.clear()
-
-	var top_row_f = scroll_offset / TILE_SIZE
-	var top_row_i = floori(top_row_f)
 	var pixel_offset = int(scroll_offset) % TILE_SIZE
+	board.position.y = pixel_offset
 
-	for visual_y in range(-3, board_height + 2):
-		var row_index = top_row_i + visual_y
-		var tile_y = visual_y
+	for coord in BoardManager.board_data.all_available_board_positions:
+		var tile_type = _get_tile_color_for_cell(coord)
+		board.set_cell(coord, 0, tile_type, 0)
+		#set_tile_coord_debug_text(coord)
 
-		var flip = row_index % 2 == 0
-		for x in range(-(row_width / 2) , row_width - (row_width / 2)):
-			var tile = TILE_WHITE
-			if flip:
-				if x % 2 != 0: tile = TILE_BLACK
-			else:
-				if x % 2 == 0: tile = TILE_BLACK
-			#set_tile_coord_debug_text(Vector2i(x, tile_y))
-			board.set_cell(Vector2i(x, tile_y), 0,tile,0)
-	board.position.y = + pixel_offset
+func redraw_pieces() -> void:
+	for piece_key in BoardManager.pieces as Dictionary[Vector2i, ChessPiece]:
+		var chess_piece = BoardManager.pieces[piece_key]
+		var chess_position = piece_key
+		var half_tile_size = board.tile_set.tile_size / 2
+		var local_pos = board.map_to_local(chess_position)
+		var global_pos = board.to_global(local_pos)
+		global_pos.y -= 20
+		#var centered_pos = local_pos
+		#centered_pos.y -= 20
+		#centered_pos.x = centered_pos.x + 408#??
+		if board.get_cell_tile_data(chess_position):
+			chess_piece.global_position = global_pos
+
+func _get_tile_color_for_cell(coord: Vector2i) -> Vector2i:
+	var flip = coord.y % 2 == 0
+	if flip:
+		if coord.x % 2 != 0:
+			return TILE_BLACK
+		else:
+			return TILE_WHITE
+	else:
+		if coord.x % 2 == 0:
+			return TILE_BLACK
+		else:
+			return TILE_WHITE
+
 
 func set_tile_coord_debug_text(coord : Vector2i) -> void:
 	var local_pos = board.map_to_local(coord)
@@ -138,47 +142,14 @@ func set_tile_coord_debug_text(coord : Vector2i) -> void:
 	text_node.global_position.x = text_node.global_position.x - 20
 	add_child(text_node)
 
-func is_within_board(current_pos : Vector2i) -> bool:
-	return board.get_cell_tile_data(current_pos) != null
-	
-func is_empty_or_enemy(current_pos: Vector2i) -> bool:
-	return is_within_board(current_pos) or is_enemy(current_pos)
-	
-func is_enemy(current_pos: Vector2i) -> bool:
-	return current_enemy_pieces.any(func(piece): return piece.current_position == current_pos)
-	
-func get_valid_moves_for_piece(chess_piece : ChessPiece) -> Array[Vector2i]:
-	var moves : Array[Vector2i] = []
-	for dir in GameManager.selected_piece.piece_data.moves["move"]:
-		var current = chess_piece.current_position + dir
-		if is_within_board(current) and is_empty_or_enemy(current):
-			moves.append(current)
-			if is_enemy(current):
-				break
-			current += dir
-	#print(moves)
-	return moves
-	
-func draw_available_moves_for_piece(avail_moves) -> void:
-	if !avail_moves:
-		return
-	clear_available_moves()
-	for coord in avail_moves:
-		var desired_tile_cell = null
-		if is_enemy(coord):
-			desired_tile_cell = TILE_ENEMY_SPACE
-		elif is_within_board(coord):
-			desired_tile_cell = TILE_AVAILBLE_SPACE
-		if !current_available_moves_for_selected_piece.has(coord):
-			current_available_moves_for_selected_piece.append(coord)
-		board.set_cell(coord, 0, desired_tile_cell, 0)
+
+func draw_available_moves_for_piece(avail_moves: Array[Vector2i]) -> void:
+	redraw_board()
+	for avail_move in avail_moves as Array[Vector2i]:
+		board.set_cell(avail_move, 0, TILE_AVAILBLE_SPACE, 0)
+	pass
 		
 func clear_available_moves() -> void:
-	#print("clear available moves")
-	#wildly horrible, but game jam?
 	redraw_board()
-	#for coord in current_available_moves_for_selected_piece as Array[Vector2i]:
-	#	board.set_cell(coord, 0, TILE_WHITE, 0)
-	current_available_moves_for_selected_piece.clear()
 	
 	
