@@ -4,13 +4,15 @@
 [ext_resource type="Texture2D" uid="uid://ddi5pc5bjlden" path="res://assets/sprites/BlackPieces.png" id="2_80p6t"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_155qt"]
+resource_local_to_scene = true
 atlas = ExtResource("2_80p6t")
 region = Rect2(0, 0, 16, 16)
 
 [resource]
+resource_local_to_scene = true
 script = ExtResource("1_vcyoo")
 texture = SubResource("AtlasTexture_155qt")
 demensions = Vector2i(16, 16)
 score_value = 1
-name = "Pawn Black"
+name = "pawn_black"
 metadata/_custom_type_script = "uid://c45dgnbtocngv"

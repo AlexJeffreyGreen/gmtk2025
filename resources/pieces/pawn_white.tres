@@ -4,13 +4,15 @@
 [ext_resource type="Texture2D" uid="uid://c2ldxc3utpvmh" path="res://assets/sprites/WhitePieces.png" id="2_dlwnk"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_cy76y"]
+resource_local_to_scene = true
 atlas = ExtResource("2_dlwnk")
 region = Rect2(0, 0, 16, 16)
 
 [resource]
+resource_local_to_scene = true
 script = ExtResource("1_rb386")
 texture = SubResource("AtlasTexture_cy76y")
 demensions = Vector2i(13, 16)
 score_value = 1
-name = "Pawn White"
+name = "pawn_white"
 metadata/_custom_type_script = "uid://c45dgnbtocngv"

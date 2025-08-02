@@ -5,6 +5,7 @@ class_name PieceData extends Resource
 @export var score_value : int
 @export var name : String
 
+
 var moves :
 	get:
 		return DIRS[name]

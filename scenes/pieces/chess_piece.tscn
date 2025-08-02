@@ -5,13 +5,16 @@
 [ext_resource type="Shader" uid="uid://cgf6x1kg37c0q" path="res://shaders/chess_piece.gdshader" id="3_3k87t"]
 [ext_resource type="Texture2D" uid="uid://c2ldxc3utpvmh" path="res://assets/sprites/WhitePieces.png" id="4_3k87t"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_pvqnb"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3k87t"]
+resource_local_to_scene = true
 shader = ExtResource("3_3k87t")
-shader_parameter/clr = Color(0, 1, 0, 1)
-shader_parameter/type = 0
-shader_parameter/thickness = 1.0
+shader_parameter/color = Color(0.976471, 0, 0, 1)
+shader_parameter/width = 1.0
+shader_parameter/pattern = 0
+shader_parameter/inside = false
+shader_parameter/add_margins = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_pvqnb"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_3k87t"]
 atlas = ExtResource("4_3k87t")
 region = Rect2(0, 0, 16, 16)
 
@@ -26,11 +29,12 @@ script = ExtResource("1_7anj6")
 piece_data = ExtResource("2_7anj6")
 
 [node name="PieceSprite" type="Sprite2D" parent="."]
-material = SubResource("ShaderMaterial_pvqnb")
-texture = SubResource("AtlasTexture_pvqnb")
+material = SubResource("ShaderMaterial_3k87t")
+texture = SubResource("AtlasTexture_3k87t")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_3k87t")
 
+[connection signal="input_event" from="." to="." method="_on_input_event"]
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

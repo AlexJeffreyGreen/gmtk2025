@@ -1,0 +1,12 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://b5a6pfr8co4pd"]
+
+[ext_resource type="Shader" uid="uid://cgf6x1kg37c0q" path="res://shaders/chess_piece.gdshader" id="1_qq81m"]
+
+[resource]
+resource_local_to_scene = true
+shader = ExtResource("1_qq81m")
+shader_parameter/color = Color(1, 1, 1, 1)
+shader_parameter/width = 0.0
+shader_parameter/pattern = 0
+shader_parameter/inside = false
+shader_parameter/add_margins = false
