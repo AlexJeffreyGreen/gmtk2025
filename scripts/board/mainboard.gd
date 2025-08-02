@@ -84,7 +84,7 @@ func _input(event: InputEvent) -> void:
 		_advance_x_rows(1)
 		redraw_board()
 	if Input.is_action_just_pressed("select_piece"):
-		print(GameManager.selected_piece)
+		#print(GameManager.selected_piece)
 		var selected_available_move = GameManager.get_available_move_at_mouse()
 		if selected_available_move:
 			move_piece_to_selected_available_tile(selected_available_move)
@@ -97,7 +97,7 @@ func move_piece_to_selected_available_tile(selected_tile_coord : Vector2i) -> vo
 	center_pos.y -= 20
 	GameManager.selected_piece.position = center_pos
 	GameManager.selected_piece.current_position = selected_tile_coord
-	GameManager.selected_piece.deselected_piece.emit()
+	GameManager.selected_piece = null
 	#GameManager.selected_piece.deselect_self()
 	
 	#GameManager.selected_piece.current_position = selected_tile_coord
@@ -156,7 +156,7 @@ func get_valid_moves_for_piece(chess_piece : ChessPiece) -> Array[Vector2i]:
 			if is_enemy(current):
 				break
 			current += dir
-	print(moves)
+	#print(moves)
 	return moves
 	
 func draw_available_moves_for_piece(avail_moves) -> void:
@@ -174,7 +174,7 @@ func draw_available_moves_for_piece(avail_moves) -> void:
 		board.set_cell(coord, 0, desired_tile_cell, 0)
 		
 func clear_available_moves() -> void:
-	print("clear available moves")
+	#print("clear available moves")
 	#wildly horrible, but game jam?
 	redraw_board()
 	#for coord in current_available_moves_for_selected_piece as Array[Vector2i]:

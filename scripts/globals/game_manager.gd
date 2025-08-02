@@ -13,16 +13,16 @@ func set_selected_piece(new_selected_piece : ChessPiece) -> void:
 	selected_piece = new_selected_piece
 	var moves = main_board.get_valid_moves_for_piece(selected_piece) as Array[Vector2i]
 	if moves:
-		print("Available move: ", moves.size())
+		#print("Available move: ", moves.size())
 		available_moves_change.emit(moves)
 		
 
 func deselect_piece() -> void:
-	print("Removing " + selected_piece.name)
+	#print("Removing " + selected_piece.name)
 	#selected_piece.deselect_self()
 	selected_piece = null
 	if !selected_piece:
-		print("no selected piece")
+		pass	#print("no selected piece")
 	available_moves_change.emit(null)
 		
 func get_available_move_at_mouse():

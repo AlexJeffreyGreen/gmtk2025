@@ -73,10 +73,13 @@ func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 		set_selected_shader_value(1, Color.GREEN)
 		#if GameManager.selected_piece != null and GameManager.selected_piece != self:
 		#	GameManager.selected_piece.set_selected_shader_value(0, Color.WHITE)
-		if GameManager.selected_piece:
+		if GameManager.selected_piece and GameManager.selected_piece != self:
 			GameManager.selected_piece.set_selected_shader_value(0, Color.WHITE)
 			deselected_piece.emit()
 		selected_piece.emit(self)
+		
+
+
 
 #func _input(event: InputEvent) -> void:
 	#pass
