@@ -13,15 +13,16 @@ var current_position : Vector2i
 var score_value : int :
 	get:
 		return piece_data.score_value
-
+var is_enemy : bool = false
 
 
 func _ready() -> void:	
 	_build_piece_from_data()
 	_build_shader()
+	#BoardManager.selected_piece_set.connect(selected_piece_set.bind())
 	#set_selected_shader_value(0, 0.0)
-	selected_piece.connect(GameManager.set_selected_piece.bind())
-	deselected_piece.connect(GameManager.deselect_piece.bind())
+	#elected_piece.connect(BoardManager.set_selected_piece.bind())
+	#deselected_piece.connect(GameManager.deselect_piece.bind())
 	#piece_sprite.material.
 
 func _build_shader() -> void:
@@ -46,19 +47,13 @@ func _build_piece_from_data() -> void:
 	piece_sprite.texture = piece_data.texture
 
 func _process(delta: float) -> void:
-	if self != GameManager.selected_piece:
-		set_selected_shader_value(0, Color.WHITE)
-
+	pass
+	#if self != GameManager.selected_piece:
+	#	set_selected_shader_value(0, Color.WHITE)
 
 func _on_mouse_entered() -> void:
 	is_mouse_over = true
-	#if GameManager.selected_piece != self:
-	#	set_selected_shader_value(1, Color.WEB_GREEN)
-	#pass
-	#set_selected_shader_value(1)
-	#selected_piece.emit(self)
 	
-
 func _on_mouse_exited() -> void:
 	is_mouse_over = false
 	#if GameManager.selected_piece != self:
@@ -68,18 +63,16 @@ func set_selected_shader_value(width : int, color : Color) -> void:
 	(piece_sprite.material as ShaderMaterial).set_shader_parameter("width" , width)
 	(piece_sprite.material as ShaderMaterial).set_shader_parameter("color", color)
 
-func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
-	if Input.is_action_just_pressed("select_piece"):
-		set_selected_shader_value(1, Color.GREEN)
-		selected_piece.emit(self)
-		#selected_piece.emit(self)
-		#if GameManager.selected_piece != null and GameManager.selected_piece != self:
-		#	GameManager.selected_piece.set_selected_shader_value(0, Color.WHITE)
-		#if GameManager.selected_piece and GameManager.selected_piece != self:
-			#GameManager.selected_piece.set_selected_shader_value(0, Color.WHITE)
-			#deselected_piece.emit()
-		#selected_piece.emit(self)
-		
+
+#func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
+	#if !is_enemy and Input.is_action_just_pressed("select_piece"):
+		#if BoardManager.current_selected_piece == null and is_mouse_over:
+			##print(current_position)	
+			#set_selected_shader_value(1, Color.GREEN)
+			#selected_piece.emit(self)
+		#else:
+			#set_selected_shader_value(0, Color.WHITE)
+			
 
 
 

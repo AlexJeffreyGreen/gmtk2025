@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PieceData" load_steps=4 format=3 uid="uid://37gr058m1o2e"]
+
+[ext_resource type="Script" uid="uid://c45dgnbtocngv" path="res://resources/pieces/piece_data.gd" id="1_13gvd"]
+[ext_resource type="Texture2D" uid="uid://c2ldxc3utpvmh" path="res://assets/sprites/WhitePieces.png" id="2_p8dy7"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u3cwh"]
+atlas = ExtResource("2_p8dy7")
+region = Rect2(80, 0, 16, 16)
+
+[resource]
+script = ExtResource("1_13gvd")
+texture = SubResource("AtlasTexture_u3cwh")
+demensions = Vector2i(0, 0)
+score_value = 100
+name = "king"
+is_sliding_piece = false
+piece_type = 5
+metadata/_custom_type_script = "uid://c45dgnbtocngv"

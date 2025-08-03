@@ -39,6 +39,7 @@ func _ready():
 	position.x = get_viewport_rect().size.x / 2 - 192
 	redraw_board()
 	redraw_pieces()
+	#BoardManager.cpu_turn_started.emit()
 	#initialize_and_respawn()
 
 	#GameManager.available_moves_change.connect(draw_available_moves_for_piece.bind())
@@ -78,19 +79,20 @@ func _process(delta: float) -> void:
 	elif scroll_offset != target_scroll_offset:
 		scroll_offset = target_scroll_offset
 		redraw_board()
-		#print("snapping")
+
 	
 func _input(event: InputEvent) -> void:
-	if Input.is_action_just_pressed("shoot"):
-		_advance_x_rows(1)
-	if Input.is_action_just_pressed("select_piece"):
-		get_tile_at_mouse_position()
+	pass
+	#if Input.is_action_just_pressed("shoot"):
+	#	_advance_x_rows(1)
+	#if Input.is_action_just_pressed("select_piece"):
+	#	get_tile_at_mouse_position()
 
 func get_tile_at_mouse_position() -> void:
 	var mouse_screen_pos = get_viewport().get_mouse_position()
 	var mouse_local_pos = board.to_local(mouse_screen_pos)
 	var tile_coords_at_mouse = board.local_to_map(mouse_local_pos)
-	print(tile_coords_at_mouse)
+	#print(tile_coords_at_mouse)
 
 func _advance_x_rows(row_count : int) -> void:
 	target_scroll_offset += TILE_SIZE * row_count
@@ -100,7 +102,7 @@ func redraw_board() -> void:
 	var pixel_offset = int(scroll_offset) % TILE_SIZE
 	board.position.y = pixel_offset
 
-	for coord in BoardManager.board_data.all_available_board_positions:
+	for coord in BoardManager.all_available_board_positions:
 		var tile_type = _get_tile_color_for_cell(coord)
 		board.set_cell(coord, 0, tile_type, 0)
 		#set_tile_coord_debug_text(coord)
@@ -112,12 +114,10 @@ func redraw_pieces() -> void:
 		var half_tile_size = board.tile_set.tile_size / 2
 		var local_pos = board.map_to_local(chess_position)
 		var global_pos = board.to_global(local_pos)
-		global_pos.y -= 20
-		#var centered_pos = local_pos
-		#centered_pos.y -= 20
-		#centered_pos.x = centered_pos.x + 408#??
+		#global_pos.y -= 20
 		if board.get_cell_tile_data(chess_position):
 			chess_piece.global_position = global_pos
+			chess_piece.piece_sprite.position.y = - 2
 
 func _get_tile_color_for_cell(coord: Vector2i) -> Vector2i:
 	var flip = coord.y % 2 == 0
@@ -143,10 +143,12 @@ func set_tile_coord_debug_text(coord : Vector2i) -> void:
 	add_child(text_node)
 
 
-func draw_available_moves_for_piece(avail_moves: Array[Vector2i]) -> void:
+func draw_available_moves_for_piece(avail_moves: Array[Vector2i], available_enemy_moves: Array[Vector2i]) -> void:
 	redraw_board()
 	for avail_move in avail_moves as Array[Vector2i]:
 		board.set_cell(avail_move, 0, TILE_AVAILBLE_SPACE, 0)
+	for avail_move in available_enemy_moves as Array[Vector2i]:
+		board.set_cell(avail_move, 0, TILE_ENEMY_SPACE, 0)
 	pass
 		
 func clear_available_moves() -> void:

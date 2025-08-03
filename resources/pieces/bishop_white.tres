@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PieceData" load_steps=4 format=3 uid="uid://yymoguun5au6"]
+
+[ext_resource type="Script" uid="uid://c45dgnbtocngv" path="res://resources/pieces/piece_data.gd" id="1_4oa1n"]
+[ext_resource type="Texture2D" uid="uid://c2ldxc3utpvmh" path="res://assets/sprites/WhitePieces.png" id="2_2e81f"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lf2kl"]
+resource_local_to_scene = true
+atlas = ExtResource("2_2e81f")
+region = Rect2(48, 0, 16, 16)
+
+[resource]
+script = ExtResource("1_4oa1n")
+texture = SubResource("AtlasTexture_lf2kl")
+demensions = Vector2i(0, 0)
+score_value = 3
+name = "bishop"
+is_sliding_piece = true
+piece_type = 3
+metadata/_custom_type_script = "uid://c45dgnbtocngv"
