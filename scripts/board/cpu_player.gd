@@ -28,8 +28,8 @@ func _ready() -> void:
 	
 func delay_cpu_move() -> void:
 	var all_possible_moves = BoardManager.get_all_possible_moves_for_cpu() as Array[PossibleMove]
+	#all_possible_moves.filter()
 	if all_possible_moves.is_empty():
-		print("No more moves to make.")
 		cpu_turn_ended.emit()
 		return
 	
@@ -54,6 +54,10 @@ func delay_cpu_move() -> void:
 	if best_move == null:
 		best_move = all_possible_moves.pick_random()
 	
+	
+	BoardManager.previously_moved_pieces.push_front(best_move.piece)
+	if BoardManager.previously_moved_pieces.size() > BoardManager.piece_cache_threshold:
+			BoardManager.previously_moved_pieces.pop_back()
 	BoardManager.move_piece_to_valid_coord(best_move.coordinates_of_move, best_move.piece)
 	cpu_turn_ended.emit()
 	

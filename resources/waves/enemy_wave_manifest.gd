@@ -1,3 +1,4 @@
-class_name EnemyWaveManifest extends Resource
+class_name SpawnWaveManifest extends Resource
 
-@export var preset_wave_paths : Array[String]
+@export var initial_wave : SpawnWave
+@export var spawn_wave_collection : Array[SpawnWave]

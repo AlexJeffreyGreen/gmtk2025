@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PieceUpgradeManifest" load_steps=9 format=3 uid="uid://1irf2accliy"]
+
+[ext_resource type="Script" uid="uid://4i67iy74hf32" path="res://resources/upgrades/piece_upgrade_data.gd" id="1_6r4qe"]
+[ext_resource type="Script" uid="uid://7be77bhewce8" path="res://resources/upgrades/piece_upgrade_manifest.gd" id="1_100ow"]
+[ext_resource type="Resource" uid="uid://cph01tetuckag" path="res://resources/upgrades/rank_up.tres" id="2_1mqvp"]
+[ext_resource type="Resource" uid="uid://bt26s1asdl7mi" path="res://resources/upgrades/add_piece_pawn.tres" id="3_ffo2d"]
+[ext_resource type="Resource" uid="uid://cl1f2pk1e3e7v" path="res://resources/upgrades/rank_down.tres" id="4_ffo2d"]
+[ext_resource type="Resource" uid="uid://bbpendogbvphe" path="res://resources/upgrades/add_piece_knight.tres" id="5_yyvcr"]
+[ext_resource type="Resource" uid="uid://nfwdiqntg78x" path="res://resources/upgrades/add_piece_rook.tres" id="6_2u3s7"]
+[ext_resource type="Resource" uid="uid://htqhndkurhsu" path="res://resources/upgrades/add_piece_queen.tres" id="7_od1ql"]
+
+[resource]
+script = ExtResource("1_100ow")
+piece_collection = Array[ExtResource("1_6r4qe")]([ExtResource("2_1mqvp"), ExtResource("3_ffo2d"), ExtResource("4_ffo2d"), ExtResource("5_yyvcr"), ExtResource("6_2u3s7"), ExtResource("7_od1ql")])
+metadata/_custom_type_script = "uid://7be77bhewce8"

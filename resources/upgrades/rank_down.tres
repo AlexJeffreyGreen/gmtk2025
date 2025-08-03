@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PieceUpgradeData" load_steps=4 format=3 uid="uid://cl1f2pk1e3e7v"]
+
+[ext_resource type="Script" uid="uid://4i67iy74hf32" path="res://resources/upgrades/piece_upgrade_data.gd" id="1_ffab1"]
+[ext_resource type="Texture2D" uid="uid://yqsyo5o1b5di" path="res://assets/sprites/upgrades-Sheet.png" id="2_ovajf"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jjfin"]
+atlas = ExtResource("2_ovajf")
+region = Rect2(144, 16, 32, 32)
+
+[resource]
+script = ExtResource("1_ffab1")
+upgrade_type = 1
+texture = SubResource("AtlasTexture_jjfin")
+name = "Rank Down"
+rarity = 3
+metadata/_custom_type_script = "uid://4i67iy74hf32"

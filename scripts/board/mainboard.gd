@@ -36,23 +36,12 @@ var current_available_moves_for_selected_piece : Array[Vector2i]
 func _ready():
 	GameManager.main_board_tile_map = self
 	BoardManager.main_board_tile_map = self
+	BoardManager.piece_spawner.new_spawned_enemy_wave.connect(redraw_pieces.bind())
+	#BoardManager.upgrade_destroyed.connect(redraw_pieces.bind())
 	position.x = get_viewport_rect().size.x / 2 - 192
 	redraw_board()
 	redraw_pieces(.2)
-	#BoardManager.cpu_turn_started.emit()
-	#initialize_and_respawn()
 
-	#GameManager.available_moves_change.connect(draw_available_moves_for_piece.bind())
-	
-#func initialize_and_respawn() -> void:
-	#var used_cells = board.get_used_cells()
-	##for cell in used_cells as Array[Vector2i]:
-		##set_tile_coord_debug_text(cell)
-	#for spawn_position in player_spawning_coords as Array[Vector2i]:
-		#generate_piece(spawn_position, chess_piece_data)
-	#
-	#for spawn_position in enemy_spawning_coords as Array[Vector2i]:
-		#generate_piece(spawn_position, chess_enemy_piece_data)
 	
 func generate_piece(spawn_position : Vector2i, chess_data : PieceData):
 	var half_tile_size = board.tile_set.tile_size / 2
@@ -92,7 +81,6 @@ func get_tile_at_mouse_position() -> void:
 	var mouse_screen_pos = get_viewport().get_mouse_position()
 	var mouse_local_pos = board.to_local(mouse_screen_pos)
 	var tile_coords_at_mouse = board.local_to_map(mouse_local_pos)
-	#print(tile_coords_at_mouse)
 
 func _advance_x_rows(row_count : int) -> void:
 	target_scroll_offset += TILE_SIZE * row_count
@@ -107,6 +95,7 @@ func redraw_board() -> void:
 		board.set_cell(coord, 0, tile_type, 0)
 		#set_tile_coord_debug_text(coord)
 
+#duplications in code, need to make generic
 func redraw_pieces(piece_delay : float = .05) -> void:
 	var ACC = 1
 	for piece_key in BoardManager.pieces as Dictionary[Vector2i, ChessPiece]:
@@ -115,12 +104,21 @@ func redraw_pieces(piece_delay : float = .05) -> void:
 		var half_tile_size = board.tile_set.tile_size / 2
 		var local_pos = board.map_to_local(chess_position)
 		var global_pos = board.to_global(local_pos)
-		#global_pos.y -= 20
 		if board.get_cell_tile_data(chess_position):
 			chess_piece.global_position = global_pos
-			#var tween_animation = create_tween()
-			#tween_animation.tween_property(chess_piece, "global_position", global_pos, 0.3).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC).set_delay(ACC * piece_delay)
 			chess_piece.piece_sprite.position.y = - 2
+		ACC += 1
+	ACC = 1
+	for piece_key in BoardManager.upgrade_pieces as Dictionary[Vector2i, PieceUpgrade]:
+		var upgrade_piece = BoardManager.upgrade_pieces[piece_key]
+		var chess_position = piece_key
+		var half_tile_size = board.tile_set.tile_size / 2
+		var local_pos = board.map_to_local(chess_position)
+		var global_pos = board.to_global(local_pos)
+		if board.get_cell_tile_data(chess_position):
+			upgrade_piece.global_position = global_pos
+			upgrade_piece.upgrade_sprite.position.y = - 2
+			upgrade_piece.piece_preview_sprite.position.y = -2
 		ACC += 1
 
 func _get_tile_color_for_cell(coord: Vector2i) -> Vector2i:

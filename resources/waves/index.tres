@@ -1,8 +1,12 @@
-[gd_resource type="Resource" script_class="EnemyWaveManifest" load_steps=2 format=3 uid="uid://djsov6yd7cqt1"]
+[gd_resource type="Resource" script_class="SpawnWaveManifest" load_steps=5 format=3 uid="uid://djsov6yd7cqt1"]
 
 [ext_resource type="Script" uid="uid://c65p0mil0qn5l" path="res://resources/waves/enemy_wave_manifest.gd" id="1_jx5q3"]
+[ext_resource type="Resource" uid="uid://cye2wk6dqrg1j" path="res://resources/waves/initial_wave.tres" id="1_oa28c"]
+[ext_resource type="Script" uid="uid://c6tatadw08djg" path="res://resources/waves/wave_preset.gd" id="2_6viv6"]
+[ext_resource type="Resource" uid="uid://bcfshd3b82wxc" path="res://resources/waves/pawn_line.tres" id="3_emwui"]
 
 [resource]
 script = ExtResource("1_jx5q3")
-preset_wave_paths = Array[String](["res://resources/waves/pawn_line.tres"])
+initial_wave = ExtResource("1_oa28c")
+spawn_wave_collection = Array[ExtResource("2_6viv6")]([ExtResource("3_emwui")])
 metadata/_custom_type_script = "uid://c65p0mil0qn5l"

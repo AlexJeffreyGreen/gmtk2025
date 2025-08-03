@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PieceUpgradeData" load_steps=5 format=3 uid="uid://htqhndkurhsu"]
+
+[ext_resource type="Resource" uid="uid://dohqkx5b7u2nl" path="res://resources/pieces/queen_white.tres" id="1_c5817"]
+[ext_resource type="Script" uid="uid://4i67iy74hf32" path="res://resources/upgrades/piece_upgrade_data.gd" id="2_krxsd"]
+[ext_resource type="Texture2D" uid="uid://yqsyo5o1b5di" path="res://assets/sprites/upgrades-Sheet.png" id="3_88sgc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_khxis"]
+atlas = ExtResource("3_88sgc")
+region = Rect2(16, 16, 32, 32)
+
+[resource]
+script = ExtResource("2_krxsd")
+upgrade_type = 2
+texture = SubResource("AtlasTexture_khxis")
+piece_to_add = ExtResource("1_c5817")
+name = "Add White Knight"
+rarity = 5
+metadata/_custom_type_script = "uid://4i67iy74hf32"

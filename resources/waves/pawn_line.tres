@@ -1,17 +1,11 @@
-[gd_resource type="Resource" script_class="WavePreset" load_steps=4 format=3 uid="uid://bcfshd3b82wxc"]
+[gd_resource type="Resource" script_class="SpawnWave" load_steps=2 format=3 uid="uid://bcfshd3b82wxc"]
 
-[ext_resource type="Script" uid="uid://c45dgnbtocngv" path="res://resources/pieces/piece_data.gd" id="1_in3px"]
 [ext_resource type="Script" uid="uid://c6tatadw08djg" path="res://resources/waves/wave_preset.gd" id="2_ch2c8"]
-[ext_resource type="Resource" uid="uid://dqbxqko5bf5hv" path="res://resources/pieces/pawn_black.tres" id="2_smdt8"]
 
 [resource]
 script = ExtResource("2_ch2c8")
-piece_layout = Dictionary[Vector2i, ExtResource("1_in3px")]({
-Vector2i(0, 0): ExtResource("2_smdt8"),
-Vector2i(2, 2): ExtResource("2_smdt8"),
-Vector2i(3, 2): ExtResource("2_smdt8"),
-Vector2i(4, 2): ExtResource("2_smdt8")
-})
+piece_layout = Array[String](["p", "p", "p", "p"])
+piece_coords = Array[Vector2i]([Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0)])
 difficulty_score = 1
 description = "The Pawn Line"
 metadata/_custom_type_script = "uid://c6tatadw08djg"

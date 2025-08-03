@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PieceUpgradeData" load_steps=5 format=3 uid="uid://bt26s1asdl7mi"]
+
+[ext_resource type="Resource" uid="uid://c0ft277e8e2vw" path="res://resources/pieces/pawn_white.tres" id="1_khxis"]
+[ext_resource type="Script" uid="uid://4i67iy74hf32" path="res://resources/upgrades/piece_upgrade_data.gd" id="1_yuidm"]
+[ext_resource type="Texture2D" uid="uid://yqsyo5o1b5di" path="res://assets/sprites/upgrades-Sheet.png" id="2_06455"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_khxis"]
+atlas = ExtResource("2_06455")
+region = Rect2(16, 16, 32, 32)
+
+[resource]
+script = ExtResource("1_yuidm")
+upgrade_type = 2
+texture = SubResource("AtlasTexture_khxis")
+piece_to_add = ExtResource("1_khxis")
+name = "Add White Pawn"
+rarity = 1
+metadata/_custom_type_script = "uid://4i67iy74hf32"

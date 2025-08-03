@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PieceUpgradeData" load_steps=5 format=3 uid="uid://nfwdiqntg78x"]
+
+[ext_resource type="Resource" uid="uid://46aijh4ti2rv" path="res://resources/pieces/rook_white.tres" id="1_wa7kg"]
+[ext_resource type="Script" uid="uid://4i67iy74hf32" path="res://resources/upgrades/piece_upgrade_data.gd" id="2_3nx32"]
+[ext_resource type="Texture2D" uid="uid://yqsyo5o1b5di" path="res://assets/sprites/upgrades-Sheet.png" id="3_3s6ta"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_khxis"]
+atlas = ExtResource("3_3s6ta")
+region = Rect2(16, 16, 32, 32)
+
+[resource]
+script = ExtResource("2_3nx32")
+upgrade_type = 2
+texture = SubResource("AtlasTexture_khxis")
+piece_to_add = ExtResource("1_wa7kg")
+name = "Add White Rook"
+rarity = 4
+metadata/_custom_type_script = "uid://4i67iy74hf32"

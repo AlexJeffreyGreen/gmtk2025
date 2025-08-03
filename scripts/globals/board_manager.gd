@@ -1,16 +1,29 @@
 extends Node
 
 var chess_piece : PackedScene = preload("res://scenes/pieces/chess_piece.tscn")
+var piece_upgrade : PackedScene = preload("res://scenes/upgrades/piece_upgrade.tscn")
+var piece_upgrade_manifest : PieceUpgradeManifest = preload("res://resources/upgrades/index.tres")
+var all_available_piece_upgrades : Array[PieceUpgradeData]
+
+var piece_data_collection : Array[PieceData] = [
+		preload("res://resources/pieces/pawn_white.tres"), 
+		preload("res://resources/pieces/knight_white.tres"),
+		preload("res://resources/pieces/rook_white.tres"),
+		preload("res://resources/pieces/bishop_white.tres"),
+		preload("res://resources/pieces/queen_white.tres"),
+	]
+
 
 
 var pieces = {}
+var upgrade_pieces = {}
 var all_available_board_positions : Array[Vector2i]
 var current_selected_piece : ChessPiece
 var main_board_tile_map : MainBoard
 var cpu : CpuPlayer
 var piece_spawner : PieceSpawner
 var board_width : int = 6
-var board_height : int = 20
+var board_height : int = 10
 var player_initial_spawn_points : Array[Vector2i] = [Vector2i(1,9), Vector2i(2, 8), Vector2i(3, 8), Vector2i(4,9)]
 var enemy_initial_spawn_points : Array[Vector2i] = [Vector2i(1,3), Vector2i(2, 4), Vector2i(3,4), Vector2i(4,3)]
 var valid_movement_moves : Array[Vector2i]
@@ -28,16 +41,20 @@ enum CURRENT_TURN {
 }
 
 var current_turn : CURRENT_TURN
+var previously_moved_pieces : Array[ChessPiece]
+var piece_cache_threshold : int = 2
 
 signal selected_piece_set(piece_selected)
 signal piece_removed
 signal cpu_turn_started
 signal board_movement_finished
+signal upgrade_piece_destroyed
 #signal player_turn_started
 
 
 func _ready() -> void:
 #	board_data = BoardData.new()
+	all_available_piece_upgrades = piece_upgrade_manifest.piece_collection
 	build_board()
 	cpu = preload("res://scripts/board/cpu_player.gd").new()
 	add_child(cpu)
@@ -60,27 +77,10 @@ func _ready() -> void:
 	piece_deletion_timer.wait_time = .25
 	piece_deletion_timer.timeout.connect(delay_piece_deletion_timeout.bind())
 	add_child(piece_deletion_timer)
-
-
-#func build_player_pieces() -> void:
-	#for spawn_position in player_initial_spawn_points as Array[Vector2i]:
-		#var new_chess_piece = chess_piece.instantiate() as ChessPiece
-		#new_chess_piece.current_position = spawn_position
-		#new_chess_piece.piece_data = chess_piece_data
-		#new_chess_piece.chess_piece_fell_offscreen.connect(remove_piece_at.bind())
-		#new_chess_piece.chess_piece_advances_offscreen.connect(piece_advances_at.bind())
-		#pieces.set(spawn_position, new_chess_piece)
-		#add_child(new_chess_piece)
 	
-#func build_enemy_pieces() -> void:
-	#for spawn_position in enemy_initial_spawn_points as Array[Vector2i]:
-		#var new_chess_piece = chess_piece.instantiate() as ChessPiece
-		#new_chess_piece.current_position = spawn_position
-		#new_chess_piece.piece_data = chess_enemy_piece_data
-		#new_chess_piece.is_enemy = true
-		#new_chess_piece.chess_piece_fell_offscreen.connect(remove_piece_at.bind())
-		#pieces.set(spawn_position, new_chess_piece)
-		#add_child(new_chess_piece)
+
+	
+
 	
 func spawn_piece(selected_piece_data : PieceData, coords : Vector2i, is_enemy : bool = false) -> void:
 	var new_chess_piece = chess_piece.instantiate() as ChessPiece
@@ -90,17 +90,39 @@ func spawn_piece(selected_piece_data : PieceData, coords : Vector2i, is_enemy : 
 	new_chess_piece.chess_piece_advances_offscreen.connect(remove_piece_at.bind())
 	pieces.set(coords, new_chess_piece)
 	add_child(new_chess_piece)
+	
+func spawn_upgrade(coords: Vector2i) -> void:
+	var piece_upgrade = piece_upgrade.instantiate() as PieceUpgrade
+	piece_upgrade.piece_upgrade_data = get_weighted_random_resource()
+	piece_upgrade.current_position = coords
+	upgrade_pieces.set(coords, piece_upgrade)
+	add_child(piece_upgrade)
 
+func get_weighted_random_resource() -> PieceUpgradeData:
+	var total_weight : float = 0.0
+	var weights = []
+	for upgrade in all_available_piece_upgrades:
+		var weight = 1.0 / float(upgrade.rarity)
+		weights.append(weight)
+		total_weight += weight
+	var rand = randf() * total_weight
+	var cumulative = 0.0
+	for i in range(all_available_piece_upgrades.size()):
+		cumulative += weights[i]
+		if rand < cumulative:
+			return all_available_piece_upgrades[i]
+	return all_available_piece_upgrades[-1]
+		
 	
 func build_board() -> void:
-	for y in range(-4, board_height + 4):
+	for y in range(0, board_height + 4):
 		for x in range(board_width):
 			all_available_board_positions.append(Vector2i(x,y))
 			pass
 	#main_board_tile_map.redraw_board()
 
 func is_within_board(current_pos : Vector2i, board : Dictionary = pieces) -> bool:
-	return main_board_tile_map.board.get_cell_tile_data(current_pos) != null
+	return main_board_tile_map.board.get_cell_tile_data(current_pos) != null# and main_board_tile_map.board.get_cell_tile_data(current_pos + Vector2i(0, 1)) != null
 	
 func is_empty_or_enemy(current_pos: Vector2i, board : Dictionary = pieces) -> bool:
 	return is_within_board(current_pos, board) or is_enemy(current_pos, board)
@@ -138,38 +160,57 @@ func is_player_piece(current_pos : Vector2i, board : Dictionary = pieces) -> boo
 	
 func get_valid_moves_for_selected_piece(chess_piece : ChessPiece) -> Array[Vector2i]:
 	var moves : Array[Vector2i] = []
-	var movement_moves : Array[Vector2i]
 	for dir in chess_piece.piece_data.moves["move"]:
 		var current = chess_piece.current_position + dir
 		while is_within_board(current):
 			if is_empty(current):
-				movement_moves.append(current)
+				moves.append(current)
 			else:
 				break
 			if not chess_piece.piece_data.is_sliding_piece:
 				break
 			current += dir	
-	return movement_moves
+	return moves
 	
 #func get_valid_moves_for_cpu_piece(chess_piece : ChessPiece) -> Array[Vector2i]:
-	
+
 func get_valid_attacking_moves_for_selected_piece(chess_piece : ChessPiece, board : Dictionary = pieces) -> Array[Vector2i]:
-	var attacking_moves : Array[Vector2i]
+	var attacking_moves : Array[Vector2i] = []
 	for dir in chess_piece.piece_data.moves["attack"]:
 		var current = chess_piece.current_position + dir
 		while is_within_board(current, board):
-			if !chess_piece.is_enemy:
-				if is_enemy(current, board):
+			if board.has(current):
+				var other_piece = board[current] as ChessPiece
+				if chess_piece.is_enemy and other_piece and !other_piece.is_enemy:
 					attacking_moves.append(current)
-					break
-			else:
-				if is_player_piece(current, board):
+				elif !chess_piece.is_enemy and other_piece and other_piece.is_enemy:
 					attacking_moves.append(current)
-					break
+				# Regardless of who it is, break here to stop sliding
+				break
 			if not chess_piece.piece_data.is_sliding_piece:
 				break
 			current += dir
 	return attacking_moves
+
+	
+#func get_valid_attacking_moves_for_selected_piece(chess_piece : ChessPiece, board : Dictionary = pieces) -> Array[Vector2i]:
+	#var attacking_moves : Array[Vector2i]
+	#for dir in chess_piece.piece_data.moves["attack"]:
+		#var current = chess_piece.current_position + dir
+		#while is_within_board(current, board):
+			#if !chess_piece.is_enemy:
+				#if is_enemy(current, board):
+					#attacking_moves.append(current)
+					#break
+			#else:
+				#if is_player_piece(current, board):
+					#attacking_moves.append(current)
+					#break
+			#
+			#if not chess_piece.piece_data.is_sliding_piece:
+				#break
+			#current += dir
+	#return attacking_moves
 	
 	
 func set_selected_piece(selected_piece : ChessPiece) -> void:
@@ -187,6 +228,7 @@ func get_all_valid_potential_moves() -> void:
 	main_board_tile_map.draw_available_moves_for_piece(valid_movement_moves, valid_attacking_moves)
 	
 func move_piece_to_valid_coord(selected_coord : Vector2i, chess_piece : ChessPiece) -> void:
+	
 	var current_piece_coord = chess_piece.current_position
 
 	if selected_coord == current_piece_coord:
@@ -200,6 +242,24 @@ func move_piece_to_valid_coord(selected_coord : Vector2i, chess_piece : ChessPie
 
 	pieces[selected_coord] = pieces[current_piece_coord]
 	pieces.erase(current_piece_coord)
+	
+	if upgrade_pieces.has(selected_coord):
+		var target_upgrade = upgrade_pieces[selected_coord] as PieceUpgrade
+		if chess_piece.is_enemy:
+			print("destroying upgrade")
+		else:
+			match(target_upgrade.piece_upgrade_data.upgrade_type):
+				PieceUpgradeData.UPGRADE_TYPE.RANK_UP:
+					chess_piece.rebuild_piece_data(upgrade_piece(chess_piece.piece_data))
+					pass
+				PieceUpgradeData.UPGRADE_TYPE.RANK_DOWN:
+					chess_piece.rebuild_piece_data(downgrade_piece(chess_piece.piece_data))
+					pass
+				PieceUpgradeData.UPGRADE_TYPE.ADD_PIECE:
+					add_new_piece(current_piece_coord, target_upgrade.piece_upgrade_data)
+					pass
+		remove_upgrade_piece_at(selected_coord, target_upgrade)
+		
 	chess_piece.current_position = selected_coord
 
 	main_board_tile_map.redraw_pieces()
@@ -239,7 +299,16 @@ func remove_piece_at(coord: Vector2i) -> void:
 		if is_enemy_piece_removed:
 			pieces_are_moveable = false
 			advance_row_timer.start()
-			
+
+func remove_upgrade_piece_at(coord: Vector2i, upgrade_piece : PieceUpgrade) -> void:
+	var removed = false
+	if upgrade_pieces.has(coord):
+		var upgrade = upgrade_pieces[coord]
+		if upgrade:
+			removed = true
+		upgrade_pieces.erase(coord)
+		upgrade.queue_free()
+
 func delay_piece_deletion_timeout() -> void:
 	piece_to_delete.queue_free()
 	piece_to_delete = null
@@ -260,7 +329,6 @@ func _input(event: InputEvent) -> void:
 	if current_selected_piece:
 		if Input.is_action_just_pressed("select_piece"):
 			var position_at_mouse = get_tile_at_mouse_position()
-			print("Position at Mouse ", position_at_mouse)
 			if valid_movement_moves.has(position_at_mouse) or valid_attacking_moves.has(position_at_mouse):
 				move_piece_to_valid_coord(position_at_mouse, current_selected_piece)
 				cpu_turn_started.emit()
@@ -282,6 +350,7 @@ var tweens_active = 0
 
 func advance_board_by_x_rows(y: int = 1) -> void:
 	var new_pieces : Dictionary = {}
+	var new_upgrades : Dictionary = {}
 	var tweens_active = 0
 
 	for pos in pieces.keys():
@@ -295,9 +364,8 @@ func advance_board_by_x_rows(y: int = 1) -> void:
 				main_board_tile_map.board.map_to_local(new_pos)
 			)
 			var tween = get_tree().create_tween()
-			tween.tween_property(piece, "global_position", world_target_pos, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			
-			# Delay logical update until after tween finishes
+			tween.tween_property(piece, "global_position", world_target_pos, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).set_delay(.5)
+
 			tween.finished.connect(func():
 				piece.current_position = new_pos
 				new_pieces[new_pos] = piece
@@ -309,11 +377,41 @@ func advance_board_by_x_rows(y: int = 1) -> void:
 		else:
 			# Handle any pieces that fall off the board
 			piece.queue_free()
+			
+	for upgrades_pos in upgrade_pieces.keys():
+		var upgrade : PieceUpgrade = upgrade_pieces[upgrades_pos]
+		var new_pos = upgrades_pos + Vector2i(0, y)
+		if is_within_board(new_pos):
+			tweens_active += 1
+			# Animate to the new global position
+			var world_target_pos = main_board_tile_map.board.to_global(
+				main_board_tile_map.board.map_to_local(new_pos)
+			)
+			var tween = get_tree().create_tween()
+			tween.tween_property(upgrade, "global_position", world_target_pos, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).set_delay(.5)
 
-	# Handle empty tween case
+			tween.finished.connect(func():
+				upgrade.current_position = new_pos
+				new_upgrades[new_pos] = upgrade
+				tweens_active -= 1
+				if tweens_active == 0:
+					upgrade_pieces = new_upgrades
+					board_movement_finished.emit()
+			)
+			
+			
+	#Handle empty tween case
 	if tweens_active == 0:
 		board_movement_finished.emit()
 
+#func retween_global_position_for_spawn(coord : Vector2i) -> void:
+	#var piece : ChessPiece = pieces[coord]
+	#var world_target_pos = main_board_tile_map.board.to_global(
+				#main_board_tile_map.board.map_to_local(coord)
+			#)
+	#var tween = get_tree().create_tween()
+	#tween.tween_property(piece, "global_position", world_target_pos, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			#
 
 
 func _on_piece_tween_complete() -> void:
@@ -343,7 +441,6 @@ func get_all_possible_moves_for_cpu() -> Array[PossibleMove]:
 	for piece in pieces as Dictionary[Vector2i, ChessPiece]:
 		var current_piece : ChessPiece = pieces[piece]
 		if !current_piece.is_enemy:
-			print("piece is not enemy")
 			continue
 		
 		var all_attacks = get_valid_attacking_moves_for_selected_piece(current_piece)
@@ -360,16 +457,16 @@ func get_all_possible_moves_for_cpu() -> Array[PossibleMove]:
 				var target_at_coords = pieces[target_position] as ChessPiece
 				if target_at_coords and !target_at_coords.is_enemy:
 					move_score += target_at_coords.piece_data.score_value
-					print(move_score)
 			#possible board control ranking
 			if is_under_threat(target_position, pieces):
-				print("is under threat")
 				move_score -= 1
 				new_possible_move.move_type = PossibleMove.MOVE_TYPE.ATTACK_UNDER_THREAT
-				
+			
+			if previously_moved_pieces.has(new_possible_move.piece):
+				move_score -= new_possible_move.piece.score_value
 
 			
-			new_possible_move.ranking = move_score
+			new_possible_move.ranking = move_score + new_possible_move.piece.score_value
 			all_possible_moves.append(new_possible_move)
 		
 		for target_position in all_moves:
@@ -389,8 +486,11 @@ func get_all_possible_moves_for_cpu() -> Array[PossibleMove]:
 			if is_under_threat(target_position, pieces):
 				move_score -= 1
 				new_possible_move.move_type = PossibleMove.MOVE_TYPE.MOVE_UNDER_THREAT
-
-			move_score += center_bonus + future_threat_bonus
+			
+			if previously_moved_pieces.has(new_possible_move.piece):
+				move_score -= new_possible_move.piece.score_value
+			
+			move_score += center_bonus + future_threat_bonus + new_possible_move.piece.score_value
 			new_possible_move.ranking = move_score
 			all_possible_moves.append(new_possible_move)
 			
@@ -427,6 +527,17 @@ func is_under_threat(possible_position : Vector2i, all_pieces: Dictionary) -> bo
 			return true
 	return false
 	
+func upgrade_piece(current: PieceData) -> PieceData:
+	var index = piece_data_collection.find(current)
+	if index == -1 or index >= piece_data_collection.size() -1:
+		return current
+	return piece_data_collection[index + 1]
 
-#func _process(delta: float) -> void:
-	#print(current_selected_piece)
+func downgrade_piece(current: PieceData) -> PieceData:
+	var index = piece_data_collection.find(current)
+	if index <= 0:
+		return current
+	return piece_data_collection[index - 1]
+	
+func add_new_piece(previous_coords: Vector2i, piece_upgrade : PieceUpgradeData):
+	spawn_piece(piece_upgrade.piece_to_add, previous_coords)

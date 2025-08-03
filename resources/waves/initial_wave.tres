@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SpawnWave" load_steps=2 format=3 uid="uid://cye2wk6dqrg1j"]
+
+[ext_resource type="Script" uid="uid://c6tatadw08djg" path="res://resources/waves/wave_preset.gd" id="1_18qnb"]
+
+[resource]
+script = ExtResource("1_18qnb")
+piece_layout = Array[String](["n", "b", "b", "n", "p", "p", "p", "p"])
+piece_coords = Array[Vector2i]([Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0), Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1), Vector2i(4, 1)])
+difficulty_score = 4
+description = "The Board"
+metadata/_custom_type_script = "uid://c6tatadw08djg"
