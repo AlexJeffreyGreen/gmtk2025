@@ -17,10 +17,16 @@ var main_board_tile_map : MainBoard
 var cpu : CpuPlayer
 var board_width : int = 6
 var board_height : int = 20
-var player_initial_spawn_points : Array[Vector2i] = [Vector2i(1,9), Vector2i(2, 9), Vector2i(3, 9), Vector2i(4,9)]
-var enemy_initial_spawn_points : Array[Vector2i] = [Vector2i(2,8), Vector2i(4, 8), Vector2i(3,2), Vector2i(4,2)]
+var player_initial_spawn_points : Array[Vector2i] = [Vector2i(1,9), Vector2i(2, 8), Vector2i(3, 8), Vector2i(4,9)]
+var enemy_initial_spawn_points : Array[Vector2i] = [Vector2i(1,3), Vector2i(2, 4), Vector2i(3,4), Vector2i(4,3)]
 var valid_movement_moves : Array[Vector2i]
 var valid_attacking_moves : Array[Vector2i]
+var rows_advanced : int = 0
+var advance_row_timer : Timer
+var piece_deletion_timer : Timer
+var pieces_are_moveable : bool = true
+var piece_to_delete : ChessPiece
+
 
 enum CURRENT_TURN {
 	PLAYER,
@@ -30,8 +36,10 @@ enum CURRENT_TURN {
 var current_turn : CURRENT_TURN
 
 signal selected_piece_set(piece_selected)
+signal piece_removed
 signal cpu_turn_started
-signal player_turn_started
+signal board_movement_finished
+#signal player_turn_started
 
 
 func _ready() -> void:
@@ -41,6 +49,20 @@ func _ready() -> void:
 	build_enemy_pieces()
 	cpu = preload("res://scripts/board/cpu_player.gd").new()
 	add_child(cpu)
+	cpu.cpu_turn_ended.connect(GameManager.evaluate_game_state.bind())
+	piece_removed.connect(GameManager.evaluate_game_state.bind())
+	
+	advance_row_timer = Timer.new()
+	advance_row_timer.one_shot = true
+	advance_row_timer.wait_time = 1
+	advance_row_timer.timeout.connect(advance_row_timeout.bind())
+	add_child(advance_row_timer)
+	
+	piece_deletion_timer = Timer.new()
+	piece_deletion_timer.one_shot = true
+	piece_deletion_timer.wait_time = .25
+	piece_deletion_timer.timeout.connect(delay_piece_deletion_timeout.bind())
+	add_child(piece_deletion_timer)
 
 
 func build_player_pieces() -> void:
@@ -48,6 +70,8 @@ func build_player_pieces() -> void:
 		var new_chess_piece = chess_piece.instantiate() as ChessPiece
 		new_chess_piece.current_position = spawn_position
 		new_chess_piece.piece_data = chess_piece_data
+		new_chess_piece.chess_piece_fell_offscreen.connect(remove_piece_at.bind())
+		new_chess_piece.chess_piece_advances_offscreen.connect(piece_advances_at.bind())
 		pieces.set(spawn_position, new_chess_piece)
 		add_child(new_chess_piece)
 	
@@ -55,8 +79,9 @@ func build_enemy_pieces() -> void:
 	for spawn_position in enemy_initial_spawn_points as Array[Vector2i]:
 		var new_chess_piece = chess_piece.instantiate() as ChessPiece
 		new_chess_piece.current_position = spawn_position
-		new_chess_piece.piece_data = chess_enemy_knight_data
+		new_chess_piece.piece_data = chess_enemy_piece_data
 		new_chess_piece.is_enemy = true
+		new_chess_piece.chess_piece_fell_offscreen.connect(remove_piece_at.bind())
 		pieces.set(spawn_position, new_chess_piece)
 		add_child(new_chess_piece)
 
@@ -158,34 +183,21 @@ func get_all_valid_potential_moves() -> void:
 func move_piece_to_valid_coord(selected_coord : Vector2i, chess_piece : ChessPiece) -> void:
 	var current_piece_coord = chess_piece.current_position
 
-	# Don't allow moving to the same square
 	if selected_coord == current_piece_coord:
 		return
 
-	# Handle attack if enemy present
 	if pieces.has(selected_coord):
 		var target_piece = pieces[selected_coord]
 		if target_piece.is_enemy:
 			score(target_piece.piece_data.score_value)
-		#else:
-			#clear_current_selection()
-		#	return
 		remove_piece_at(selected_coord)
 
-	# Move piece to new position
 	pieces[selected_coord] = pieces[current_piece_coord]
 	pieces.erase(current_piece_coord)
 	chess_piece.current_position = selected_coord
 
-	#main_board_tile_map.re
 	main_board_tile_map.redraw_pieces()
-	# Reposition the visual representation
-	#var local_pos = main_board_tile_map.board.map_to_local(selected_coord)
-	#var global_pos = main_board_tile_map.board.to_global(local_pos)
-	#global_pos.y -= 20  # adjust sprite Y if needed
-#
-	#if main_board_tile_map.board.get_cell_tile_data(selected_coord):
-		#current_selected_piece.global_position = global_pos
+
 	if current_selected_piece:
 		clear_current_selection()
 	main_board_tile_map.redraw_board()
@@ -201,12 +213,39 @@ func clear_available_moves() -> void:
 	valid_movement_moves.clear()
 
 func remove_piece_at(coord: Vector2i) -> void:
+	var removed = false
+	var is_enemy_piece_removed = false
 	if pieces.has(coord):
 		var piece = pieces[coord]
 		if piece:
-			piece.queue_free()
-		pieces.erase(coord)
+			removed = true
+			if piece.is_enemy:
+				is_enemy_piece_removed = true
+			piece_to_delete = piece
+			piece_deletion_timer.start()
+			#piece.queue_free()
 
+		pieces.erase(coord)
+		piece_removed.emit()
+	if removed:
+		if current_selected_piece != null:
+			clear_current_selection()
+		if is_enemy_piece_removed:
+			pieces_are_moveable = false
+			advance_row_timer.start()
+			
+func delay_piece_deletion_timeout() -> void:
+	piece_to_delete.queue_free()
+	piece_to_delete = null
+
+func piece_advances_at(coord: Vector2i) -> void:
+	#if pieces.has(coord):
+	advance_row_timer.start()
+	pieces_are_moveable = false
+	
+func advance_row_timeout() -> void:
+	advance_board_by_x_rows()
+	pieces_are_moveable = true
 
 func score(score_val : int) -> void:
 	print("scored: " , score_val)
@@ -215,7 +254,7 @@ func _input(event: InputEvent) -> void:
 	if current_selected_piece:
 		if Input.is_action_just_pressed("select_piece"):
 			var position_at_mouse = get_tile_at_mouse_position()
-			print("Position at Moue ", position_at_mouse)
+			print("Position at Mouse ", position_at_mouse)
 			if valid_movement_moves.has(position_at_mouse) or valid_attacking_moves.has(position_at_mouse):
 				move_piece_to_valid_coord(position_at_mouse, current_selected_piece)
 				cpu_turn_started.emit()
@@ -223,18 +262,60 @@ func _input(event: InputEvent) -> void:
 			if piece_at_mouse != null and current_selected_piece and piece_at_mouse != current_selected_piece and !piece_at_mouse.is_enemy:
 				clear_current_selection()
 				set_selected_piece(piece_at_mouse)
-
-			#if select_player_piece_at_mouse() != current_selected_piece and select_player_piece_at_mouse().is_e
 	else:
 		if Input.is_action_just_pressed("select_piece"):
 			var tmp_current_piece_at_mouse = select_player_piece_at_mouse()
-			if tmp_current_piece_at_mouse:
+			if tmp_current_piece_at_mouse && pieces_are_moveable:
+				#can_select_piece = false
 				set_selected_piece(tmp_current_piece_at_mouse)
+
+		
+var tweens_active = 0
+
+
+
+func advance_board_by_x_rows(y: int = 1) -> void:
+	var new_pieces : Dictionary = {}
+	var tweens_active = 0
+
+	for pos in pieces.keys():
+		var piece: ChessPiece = pieces[pos]
+		var new_pos = pos + Vector2i(0, y)
+
+		if is_within_board(new_pos):
+			tweens_active += 1
+			# Animate to the new global position
+			var world_target_pos = main_board_tile_map.board.to_global(
+				main_board_tile_map.board.map_to_local(new_pos)
+			)
+			var tween = get_tree().create_tween()
+			tween.tween_property(piece, "global_position", world_target_pos, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			
+			# Delay logical update until after tween finishes
+			tween.finished.connect(func():
+				piece.current_position = new_pos
+				new_pieces[new_pos] = piece
+				tweens_active -= 1
+				if tweens_active == 0:
+					pieces = new_pieces
+					board_movement_finished.emit()
+			)
+		else:
+			# Handle any pieces that fall off the board
+			piece.queue_free()
+
+	# Handle empty tween case
+	if tweens_active == 0:
+		board_movement_finished.emit()
+
+
+
+func _on_piece_tween_complete() -> void:
+	tweens_active -= 1
+	if tweens_active == 0:
+		board_movement_finished.emit()
+
 	
-	if Input.is_action_just_pressed("advance_row"):
-		pass
-
-
 func select_player_piece_at_mouse() -> ChessPiece:
 	var position_at_mouse = get_tile_at_mouse_position()
 	if pieces.has(position_at_mouse) and pieces[position_at_mouse] != null:
@@ -245,10 +326,11 @@ func select_player_piece_at_mouse() -> ChessPiece:
 			
 
 func get_tile_at_mouse_position() -> Vector2i:
-	var mouse_screen_pos = get_viewport().get_mouse_position()
-	var mouse_local_pos = main_board_tile_map.board.to_local(mouse_screen_pos)
-	var tile_coords_at_mouse = main_board_tile_map.board.local_to_map(mouse_local_pos)
-	return tile_coords_at_mouse
+	var global_mouse_pos = main_board_tile_map.board.get_global_mouse_position()
+	var local_mouse_pos = main_board_tile_map.board.to_local(global_mouse_pos)
+	var tile_coords = main_board_tile_map.board.local_to_map(local_mouse_pos)
+	tile_coords.y -= rows_advanced
+	return tile_coords
 	
 func get_all_possible_moves_for_cpu() -> Array[PossibleMove]:
 	var all_possible_moves : Array[PossibleMove]

@@ -7,7 +7,9 @@ var selected_piece : ChessPiece
 var main_board_tile_map : MainBoard
 
 func _ready() -> void:
-	BoardManager.player_turn_started.connect(evaluate_game_state.bind())
+	pass
+	#pass
+	#BoardManager.player_turn_started.connect(evaluate_game_state.bind())
 	
 func evaluate_game_state() -> void:
 	var at_least_one_move_is_available : bool

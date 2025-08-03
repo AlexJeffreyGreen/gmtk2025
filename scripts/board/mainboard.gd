@@ -38,7 +38,7 @@ func _ready():
 	BoardManager.main_board_tile_map = self
 	position.x = get_viewport_rect().size.x / 2 - 192
 	redraw_board()
-	redraw_pieces()
+	redraw_pieces(.2)
 	#BoardManager.cpu_turn_started.emit()
 	#initialize_and_respawn()
 
@@ -107,7 +107,8 @@ func redraw_board() -> void:
 		board.set_cell(coord, 0, tile_type, 0)
 		#set_tile_coord_debug_text(coord)
 
-func redraw_pieces() -> void:
+func redraw_pieces(piece_delay : float = .05) -> void:
+	var ACC = 1
 	for piece_key in BoardManager.pieces as Dictionary[Vector2i, ChessPiece]:
 		var chess_piece = BoardManager.pieces[piece_key]
 		var chess_position = piece_key
@@ -117,7 +118,10 @@ func redraw_pieces() -> void:
 		#global_pos.y -= 20
 		if board.get_cell_tile_data(chess_position):
 			chess_piece.global_position = global_pos
+			#var tween_animation = create_tween()
+			#tween_animation.tween_property(chess_piece, "global_position", global_pos, 0.3).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC).set_delay(ACC * piece_delay)
 			chess_piece.piece_sprite.position.y = - 2
+		ACC += 1
 
 func _get_tile_color_for_cell(coord: Vector2i) -> Vector2i:
 	var flip = coord.y % 2 == 0

@@ -2,6 +2,8 @@ class_name ChessPiece extends Area2D
 
 signal selected_piece(current_piece)
 signal deselected_piece
+signal chess_piece_fell_offscreen(current_position)
+signal chess_piece_advances_offscreen(current_position)
 
 @export var piece_data : PieceData
 @onready var piece_sprite : Sprite2D = $"PieceSprite"
@@ -19,11 +21,7 @@ var is_enemy : bool = false
 func _ready() -> void:	
 	_build_piece_from_data()
 	_build_shader()
-	#BoardManager.selected_piece_set.connect(selected_piece_set.bind())
-	#set_selected_shader_value(0, 0.0)
-	#elected_piece.connect(BoardManager.set_selected_piece.bind())
-	#deselected_piece.connect(GameManager.deselect_piece.bind())
-	#piece_sprite.material.
+	global_position = Vector2(get_viewport_rect().size.x / 2, -50)
 
 func _build_shader() -> void:
 	var base_texture = piece_sprite.texture
@@ -82,3 +80,18 @@ func set_selected_shader_value(width : int, color : Color) -> void:
 		##print("deselected piece")
 		#deselected_piece.emit()
 		#set_selected_shader_value(0, Color.WHITE) 
+
+
+func _on_visible_on_screen_notifier_2d_screen_entered() -> void:
+	pass # Replace with function body.
+
+
+func _on_visible_on_screen_notifier_2d_screen_exited() -> void:
+	print("off screen")
+	chess_piece_fell_offscreen.emit(current_position)
+
+
+func _on_top_visible_on_screen_notifier_screen_exited() -> void:
+	print("advancing off screen")
+	chess_piece_advances_offscreen.emit(current_position)
+	#pass # Replace with function body.
