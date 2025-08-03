@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PieceData" load_steps=4 format=3 uid="uid://hu5m81d1vb6p"]
+
+[ext_resource type="Script" uid="uid://c45dgnbtocngv" path="res://resources/pieces/piece_data.gd" id="1_cs2ju"]
+[ext_resource type="Texture2D" uid="uid://ddi5pc5bjlden" path="res://assets/sprites/BlackPieces.png" id="2_cs2ju"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2klq0"]
+resource_local_to_scene = true
+atlas = ExtResource("2_cs2ju")
+region = Rect2(64, 0, 16, 16)
+
+[resource]
+script = ExtResource("1_cs2ju")
+texture = SubResource("AtlasTexture_2klq0")
+demensions = Vector2i(0, 0)
+score_value = 9
+name = "queen"
+is_sliding_piece = true
+piece_type = 4
+metadata/_custom_type_script = "uid://c45dgnbtocngv"

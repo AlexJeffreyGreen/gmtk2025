@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://c2ldxc3utpvmh" path="res://assets/sprites/WhitePieces.png" id="2_p8dy7"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_u3cwh"]
+resource_local_to_scene = true
 atlas = ExtResource("2_p8dy7")
 region = Rect2(80, 0, 16, 16)
 

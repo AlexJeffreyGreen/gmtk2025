@@ -1,20 +1,14 @@
 extends Node
 
 var chess_piece : PackedScene = preload("res://scenes/pieces/chess_piece.tscn")
-var chess_piece_knight_data : PieceData = preload("res://resources/pieces/knight_white.tres")
-var chess_piece_bishop_data : PieceData = preload("res://resources/pieces/bishop_white.tres")
-var chess_piece_rook_data : PieceData = preload("res://resources/pieces/rook_white.tres")
-var chess_piece_queen_data : PieceData = preload("res://resources/pieces/queen_white.tres")
-var chess_piece_king_data : PieceData = preload("res://resources/pieces/king_white.tres")
-var chess_piece_data : PieceData = preload("res://resources/pieces/pawn_white.tres")
-var chess_enemy_piece_data : PieceData = preload("res://resources/pieces/pawn_black.tres")
-var chess_enemy_knight_data : PieceData = preload("res://resources/pieces/knight_black.tres")
+
 
 var pieces = {}
 var all_available_board_positions : Array[Vector2i]
 var current_selected_piece : ChessPiece
 var main_board_tile_map : MainBoard
 var cpu : CpuPlayer
+var piece_spawner : PieceSpawner
 var board_width : int = 6
 var board_height : int = 20
 var player_initial_spawn_points : Array[Vector2i] = [Vector2i(1,9), Vector2i(2, 8), Vector2i(3, 8), Vector2i(4,9)]
@@ -45,11 +39,14 @@ signal board_movement_finished
 func _ready() -> void:
 #	board_data = BoardData.new()
 	build_board()
-	build_player_pieces()
-	build_enemy_pieces()
 	cpu = preload("res://scripts/board/cpu_player.gd").new()
 	add_child(cpu)
 	cpu.cpu_turn_ended.connect(GameManager.evaluate_game_state.bind())
+	
+	piece_spawner = preload("res://scripts/board/piece_spawner.gd").new()
+	add_child(piece_spawner)
+	
+	
 	piece_removed.connect(GameManager.evaluate_game_state.bind())
 	
 	advance_row_timer = Timer.new()
@@ -65,25 +62,34 @@ func _ready() -> void:
 	add_child(piece_deletion_timer)
 
 
-func build_player_pieces() -> void:
-	for spawn_position in player_initial_spawn_points as Array[Vector2i]:
-		var new_chess_piece = chess_piece.instantiate() as ChessPiece
-		new_chess_piece.current_position = spawn_position
-		new_chess_piece.piece_data = chess_piece_data
-		new_chess_piece.chess_piece_fell_offscreen.connect(remove_piece_at.bind())
-		new_chess_piece.chess_piece_advances_offscreen.connect(piece_advances_at.bind())
-		pieces.set(spawn_position, new_chess_piece)
-		add_child(new_chess_piece)
+#func build_player_pieces() -> void:
+	#for spawn_position in player_initial_spawn_points as Array[Vector2i]:
+		#var new_chess_piece = chess_piece.instantiate() as ChessPiece
+		#new_chess_piece.current_position = spawn_position
+		#new_chess_piece.piece_data = chess_piece_data
+		#new_chess_piece.chess_piece_fell_offscreen.connect(remove_piece_at.bind())
+		#new_chess_piece.chess_piece_advances_offscreen.connect(piece_advances_at.bind())
+		#pieces.set(spawn_position, new_chess_piece)
+		#add_child(new_chess_piece)
 	
-func build_enemy_pieces() -> void:
-	for spawn_position in enemy_initial_spawn_points as Array[Vector2i]:
-		var new_chess_piece = chess_piece.instantiate() as ChessPiece
-		new_chess_piece.current_position = spawn_position
-		new_chess_piece.piece_data = chess_enemy_piece_data
-		new_chess_piece.is_enemy = true
-		new_chess_piece.chess_piece_fell_offscreen.connect(remove_piece_at.bind())
-		pieces.set(spawn_position, new_chess_piece)
-		add_child(new_chess_piece)
+#func build_enemy_pieces() -> void:
+	#for spawn_position in enemy_initial_spawn_points as Array[Vector2i]:
+		#var new_chess_piece = chess_piece.instantiate() as ChessPiece
+		#new_chess_piece.current_position = spawn_position
+		#new_chess_piece.piece_data = chess_enemy_piece_data
+		#new_chess_piece.is_enemy = true
+		#new_chess_piece.chess_piece_fell_offscreen.connect(remove_piece_at.bind())
+		#pieces.set(spawn_position, new_chess_piece)
+		#add_child(new_chess_piece)
+	
+func spawn_piece(selected_piece_data : PieceData, coords : Vector2i, is_enemy : bool = false) -> void:
+	var new_chess_piece = chess_piece.instantiate() as ChessPiece
+	new_chess_piece.current_position = coords
+	new_chess_piece.piece_data = selected_piece_data
+	new_chess_piece.is_enemy = is_enemy
+	new_chess_piece.chess_piece_advances_offscreen.connect(remove_piece_at.bind())
+	pieces.set(coords, new_chess_piece)
+	add_child(new_chess_piece)
 
 	
 func build_board() -> void:
@@ -93,39 +99,39 @@ func build_board() -> void:
 			pass
 	#main_board_tile_map.redraw_board()
 
-func is_within_board(current_pos : Vector2i) -> bool:
+func is_within_board(current_pos : Vector2i, board : Dictionary = pieces) -> bool:
 	return main_board_tile_map.board.get_cell_tile_data(current_pos) != null
 	
-func is_empty_or_enemy(current_pos: Vector2i) -> bool:
-	return is_within_board(current_pos) or is_enemy(current_pos)
+func is_empty_or_enemy(current_pos: Vector2i, board : Dictionary = pieces) -> bool:
+	return is_within_board(current_pos, board) or is_enemy(current_pos, board)
 
-func is_empty(current_pos: Vector2i) -> bool:
-	return is_within_board(current_pos) and !is_enemy(current_pos) and !is_player_piece(current_pos)
+func is_empty(current_pos: Vector2i, board : Dictionary = pieces) -> bool:
+	return is_within_board(current_pos, board) and !is_enemy(current_pos, board) and !is_player_piece(current_pos, board)
 	
-func is_enemy(current_pos: Vector2i) -> bool:
-	if !pieces.has(current_pos):
+func is_enemy(current_pos: Vector2i, board : Dictionary = pieces) -> bool:
+	if !board.has(current_pos):
 		return false
-	var piece = pieces[current_pos]
+	var piece = board[current_pos]
 	if piece == null:
-		pieces.erase(current_pos)  # Clean up the bad key
+		board.erase(current_pos)  # Clean up the bad key
 		return false
 	return piece.is_enemy
 	
-func is_enemy_or_player_piece(current_pos : Vector2i) -> bool:
-	if !pieces.has(current_pos):
+func is_enemy_or_player_piece(current_pos : Vector2i, board : Dictionary = pieces) -> bool:
+	if !board.has(current_pos):
 		return false
-	var piece = pieces[current_pos]
+	var piece = board[current_pos]
 	if piece == null:
-		pieces.erase(current_pos)  # Clean up the bad key
+		board.erase(current_pos)  # Clean up the bad key
 		return false
 	return piece != null
 	
-func is_player_piece(current_pos : Vector2i) -> bool:
-	if !pieces.has(current_pos):
+func is_player_piece(current_pos : Vector2i, board : Dictionary = pieces) -> bool:
+	if !board.has(current_pos):
 		return false
-	var piece = pieces[current_pos]
+	var piece = board[current_pos]
 	if piece == null:
-		pieces.erase(current_pos)  # Clean up the bad key
+		board.erase(current_pos)  # Clean up the bad key
 		return false
 	return !piece.is_enemy
 
@@ -147,17 +153,17 @@ func get_valid_moves_for_selected_piece(chess_piece : ChessPiece) -> Array[Vecto
 	
 #func get_valid_moves_for_cpu_piece(chess_piece : ChessPiece) -> Array[Vector2i]:
 	
-func get_valid_attacking_moves_for_selected_piece(chess_piece : ChessPiece) -> Array[Vector2i]:
+func get_valid_attacking_moves_for_selected_piece(chess_piece : ChessPiece, board : Dictionary = pieces) -> Array[Vector2i]:
 	var attacking_moves : Array[Vector2i]
 	for dir in chess_piece.piece_data.moves["attack"]:
 		var current = chess_piece.current_position + dir
-		while is_within_board(current):
+		while is_within_board(current, board):
 			if !chess_piece.is_enemy:
-				if is_enemy(current):
+				if is_enemy(current, board):
 					attacking_moves.append(current)
 					break
 			else:
-				if is_player_piece(current):
+				if is_player_piece(current, board):
 					attacking_moves.append(current)
 					break
 			if not chess_piece.piece_data.is_sliding_piece:
@@ -372,17 +378,42 @@ func get_all_possible_moves_for_cpu() -> Array[PossibleMove]:
 			new_possible_move.coordinates_of_move = target_position
 			new_possible_move.move_type = PossibleMove.MOVE_TYPE.MOVE
 			new_possible_move.piece = pieces[piece]
+			var center_bonus : int = 0
+			if target_position.x in [2,3,4,5] and target_position.y in [2,3,4,5]:
+				center_bonus += 1
+			
+			var future_threat_bonus : int = 0
+			if would_have_los_to_piece(current_piece, target_position):
+				future_threat_bonus += 4
 			
 			if is_under_threat(target_position, pieces):
 				move_score -= 1
 				new_possible_move.move_type = PossibleMove.MOVE_TYPE.MOVE_UNDER_THREAT
 
+			move_score += center_bonus + future_threat_bonus
 			new_possible_move.ranking = move_score
 			all_possible_moves.append(new_possible_move)
 			
 			#possibly do multiple potential checks?
 		
 	return all_possible_moves
+
+func would_have_los_to_piece(piece : ChessPiece, target_position: Vector2i) -> bool:
+	var return_value : bool = false
+	var simulated_board = pieces.duplicate(true)
+	simulated_board.erase(piece.current_position)
+	simulated_board[target_position] = piece
+	
+	#check if new board allows for LOS
+	var attack_positions = get_valid_attacking_moves_for_selected_piece(piece, simulated_board)
+	for pos in attack_positions:
+		if simulated_board.has(pos):
+			var other = simulated_board[pos]
+			if other and !other.is_enemy:
+				return_value = true
+	simulated_board.clear()
+	simulated_board = null
+	return return_value
 	
 func is_under_threat(possible_position : Vector2i, all_pieces: Dictionary) -> bool:
 	for other_pieces in all_pieces:

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PieceData" load_steps=4 format=3 uid="uid://b2ocuot71cmwj"]
+
+[ext_resource type="Script" uid="uid://c45dgnbtocngv" path="res://resources/pieces/piece_data.gd" id="1_cd58o"]
+[ext_resource type="Texture2D" uid="uid://ddi5pc5bjlden" path="res://assets/sprites/BlackPieces.png" id="2_cd58o"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dwgle"]
+resource_local_to_scene = true
+atlas = ExtResource("2_cd58o")
+region = Rect2(80, 0, 16, 16)
+
+[resource]
+script = ExtResource("1_cd58o")
+texture = SubResource("AtlasTexture_dwgle")
+demensions = Vector2i(0, 0)
+score_value = 100
+name = "king"
+is_sliding_piece = false
+piece_type = 5
+metadata/_custom_type_script = "uid://c45dgnbtocngv"

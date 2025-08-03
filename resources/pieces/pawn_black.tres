@@ -15,4 +15,6 @@ texture = SubResource("AtlasTexture_155qt")
 demensions = Vector2i(16, 16)
 score_value = 1
 name = "pawn_black"
+is_sliding_piece = false
+piece_type = 0
 metadata/_custom_type_script = "uid://c45dgnbtocngv"

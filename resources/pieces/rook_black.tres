@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PieceData" load_steps=4 format=3 uid="uid://duvk5e1lil3fu"]
+
+[ext_resource type="Script" uid="uid://c45dgnbtocngv" path="res://resources/pieces/piece_data.gd" id="1_g2wpw"]
+[ext_resource type="Texture2D" uid="uid://ddi5pc5bjlden" path="res://assets/sprites/BlackPieces.png" id="2_g2wpw"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2t0n6"]
+resource_local_to_scene = true
+atlas = ExtResource("2_g2wpw")
+region = Rect2(32, 0, 16, 16)
+
+[resource]
+script = ExtResource("1_g2wpw")
+texture = SubResource("AtlasTexture_2t0n6")
+demensions = Vector2i(0, 0)
+score_value = 5
+name = "rook"
+is_sliding_piece = true
+piece_type = 2
+metadata/_custom_type_script = "uid://c45dgnbtocngv"

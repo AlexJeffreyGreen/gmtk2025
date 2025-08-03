@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="EnemyWaveManifest" load_steps=2 format=3 uid="uid://djsov6yd7cqt1"]
+
+[ext_resource type="Script" uid="uid://c65p0mil0qn5l" path="res://resources/waves/enemy_wave_manifest.gd" id="1_jx5q3"]
+
+[resource]
+script = ExtResource("1_jx5q3")
+preset_wave_paths = Array[String](["res://resources/waves/pawn_line.tres"])
+metadata/_custom_type_script = "uid://c65p0mil0qn5l"
